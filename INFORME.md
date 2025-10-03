@@ -140,14 +140,14 @@ exec yosoytupadre failed
 se soluciono añadiendo lo siguiente en el makefile:
 ```bash
 $U/_yosoytupadre\
-$U/_test_ancestor\
 ```
 
-5.2) una complicacion menor fue la sintaxsis de C, pero con un poco de ayuda de copilot se hace bastante mas facil 
-5.3)
+5.2) Una complicacion menor fue la sintaxsis de C, pero con un poco de ayuda de copilot se hace bastante mas facil 
+5.3) Otra complicación fue saber exactamente todos los archivos que se tenian que cambiar para poder hacer un syscall de manera correcta 
+5.4) Cometimos errores al escribir el nombre de las funciones en los diferentes archivo, esto nos arrojo "undefined reference", lo que nos hizo volver a revisar cada uno para poner los nombres de manera correcta
 
-
-
+### 6) Funcionamiento de las syscall
+Una syscall permite que un programa solicite servicios al kernel de forma segura. El programa llama a una función de biblioteca que genera un trap al kernel, el cual identifica la syscall, ejecuta la función correspondiente y devuelve el resultado al programa. De esta manera, se puede interactuar con recursos protegidos sin acceder directamente al hardware.
 
 ### CONFIRMACION DE USO:
 <img width="509" height="351" alt="image" src="https://github.com/user-attachments/assets/ed44ad67-abc1-4da2-8f51-7a8542eac3a9" />
