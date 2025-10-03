@@ -50,18 +50,18 @@ entry("getppid");
 entry("getancestror"); 
 ```
 
-4) una vez configuradas las funciones se procede a probarlas.
+### 4) una vez configuradas las funciones se procede a probarlas.
 
 se crea el archivo yosoytupadre.c en la carpeta user siguiendo las instrucciones de la pauta, luego se utiliza el codigo visto en clases para implementar las 2 nuevas system calls:
 
 ```bash
 cofdigooooooooooooo
 ```
-5) Posteriormente se replica lo mismo con la otra funcion -----> getancestor()
+### 5) Posteriormente se replica lo mismo con la otra funcion -----> getancestor()
 
 ```bash
 ```
-6) manejo de fallo!!!
+### 6) manejo de fallo!!!
 
 al querer correr el script vemos que no aparece entre las opciones al ejecutar un "ls", esto se debia a que los 2 nuevos archivos no estaban inlcuidos en el Makefile, por lo tanto no se estaban compilando en el ejecutable.
 
@@ -76,5 +76,5 @@ $U/_test_ancestror\
 ```
 
 
-CONFIRMACION DE USO:
+### CONFIRMACION DE USO:
 <img width="649" height="335" alt="image" src="https://github.com/user-attachments/assets/afea1423-25b0-4450-845f-ba1f795928dc" />
