@@ -8,11 +8,42 @@ para crear nuevos sistem calls en el SO de xv6 debemos acceder al kernel y añad
 
 #### getppid()
 ```bash
-aca va el codigo del sys_getppid()
+uint64
+sys_getppid(void)
+{
+  struct proc *p = myproc();  // Obtener proceso actual
+  if(p->parent)
+    return p->parent->pid;    // Retornar PID del padre
+  else
+    return 0;                 // Si no hay padre, retornar 0
+}
 ```
 #### getancestor()
 ```bash
-aca va el codigo del sys_getancestor()
+uint64
+// System call para retornar el ancestro n-ésimo del proceso actual
+sys_getancestor(void)
+{
+    int n;
+    struct proc *p;
+
+    // Obtener argumento n
+    argint(0, &n);   // En tu versión, argint es void, no retorna valor
+
+    if (n < 0)
+        return -1;
+
+    p = myproc();
+
+    for (int i = 0; i < n; i++) {
+        if (p->parent)
+            p = p->parent;
+        else
+            return -1;  // No hay suficientes ancestros
+    }
+
+    return p->pid;
+}
 ```
 esto se hace de la siguiente manera, ya que el SO debe tener en sus registros las sistem calls para poder utilizarlas posteriormente en los procesos.
 
