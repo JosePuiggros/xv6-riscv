@@ -60,6 +60,20 @@ cofdigooooooooooooo
 ### 5) Posteriormente se replica lo mismo con la otra funcion -----> getancestor()
 
 ```bash
+#include "kernel/types.h"
+#include "user.h"
+
+int main() {
+  printf("ID proceso : %d\n", getancestror(0));
+  printf("el ID del padre es : %d\n", getancestror(1));
+  printf("el ID del abuelo es : %d\n", getancestror(2));
+  if (getancestor(3)>-1){
+       printf(" el ID del bisabuelo es : %d\n", getancestror(3));
+    } else {
+      printf("no existe bisabuelo del proceso: %d\n", getancestror(0))
+    }
+  exit(0);
+}
 ```
 ### 6) manejo de fallo!!!
 
