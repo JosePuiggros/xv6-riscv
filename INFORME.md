@@ -56,16 +56,37 @@ se crea el archivo yosoytupadre.c en la carpeta user siguiendo las instrucciones
 
 yosoytupadre.c:
 ```bash
-cofdigooooooooooooo
-```
-### 5) Posteriormente se replica lo mismo con la otra funcion -----> getancestor()
-
-nombre_archivo.c
-```bash
 #include "kernel/types.h"
 #include "user.h"
 
-int main() {
+int main(void)
+{
+
+ // prueba syscall getppid()
+
+  int pid_hijo;
+
+  pid_hijo = fork();
+
+  switch(pid_hijo) {
+    case -1:
+      // Error al crear el hijo
+      printf("No se pudo crear el proceso hijo\n");
+      exit(1);
+
+    case 0:
+      // Código del hijo
+      printf("Soy el hijo -> PID: %d | PID de mi padre: %d\n", getpid(), getppid());
+      exit(0);
+
+    default:
+      // Código del padre
+      wait(0); // Espera a que el hijo termine
+      printf("Soy el padre -> PID: %d | PID de mi hijo: %d\n", getpid(), pid_hijo);
+  }
+
+  // prueba syscall getancestor()
+
   printf("ID proceso : %d\n", getancestor(0));
   printf("el ID del padre es : %d\n", getancestor(1));
   printf("el ID del abuelo es : %d\n", getancestor(2));
@@ -77,9 +98,9 @@ int main() {
   exit(0);
 }
 ```
-### 6) manejo de fallos
+### 5) manejo de fallos
 
-6.1) al querer correr el script vemos que no aparece entre las opciones al ejecutar un "ls", esto se debia a que los 2 nuevos archivos no estaban inlcuidos en el Makefile, por lo tanto no se estaban compilando en el ejecutable.
+5.1) al querer correr el script vemos que no aparece entre las opciones al ejecutar un "ls", esto se debia a que los 2 nuevos archivos no estaban inlcuidos en el Makefile, por lo tanto no se estaban compilando en el ejecutable.
 
 ```c
 $ yosoytupadre
@@ -91,7 +112,7 @@ $U/_yosoytupadre\
 $U/_test_ancestor\
 ```
 
-6.2)
+5.2)
 
 
 
