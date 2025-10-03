@@ -110,8 +110,8 @@ getppid:
  li a7, SYS_getppid
  ecall
  ret
-.global getancestror
-getancestror:
- li a7, SYS_getancestror
+.global getancestor
+getancestor:
+ li a7, SYS_getancestor
  ecall
  ret

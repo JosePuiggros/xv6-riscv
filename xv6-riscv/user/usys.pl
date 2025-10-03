@@ -43,4 +43,4 @@ entry("sbrk");
 entry("pause");
 entry("uptime");
 entry("getppid");         #Línea agregada para getppid
-entry("getancestror");    #Línea agregada para getancestror
+entry("getancestor");    #Línea agregada para getancestor
