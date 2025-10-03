@@ -112,10 +112,12 @@ $U/_yosoytupadre\
 $U/_test_ancestor\
 ```
 
-5.2)
+5.2) una complicacion menor fue la sintaxsis de C, pero con un poco de ayuda de copilot se hace bastante mas facil 
+5.3)
 
 
 
 
 ### CONFIRMACION DE USO:
-<img width="649" height="335" alt="image" src="https://github.com/user-attachments/assets/afea1423-25b0-4450-845f-ba1f795928dc" />
+<img width="509" height="351" alt="image" src="https://github.com/user-attachments/assets/ed44ad67-abc1-4da2-8f51-7a8542eac3a9" />
+
