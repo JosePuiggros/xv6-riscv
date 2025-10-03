@@ -22,7 +22,7 @@ como todo proceso, los dos nuevos deben tener un numero identificador para poder
 
 ```bash
 #define SYS_getppid 22
-#define SYS_getancestror 23
+#define SYS_getancestor 23
 ```
 
 ### 3) añadir ambas funciones a todos los registro necesarios para que puedan llamarse y funcionar correctamente.
@@ -32,52 +32,54 @@ añadimos las 2 creadas con anterioridad
 
 ```bash
 extern uint64 sys_getppid(void);  
-extern uint64 sys_getancestror(void);
+extern uint64 sys_getancestor(void);
 ```
 3.2) en el archivo sysproc.c se deben añadir para agregarlas a una lista de punteros hacia funciones (xv6 recorre esta lista para acceder a ellas).
 ```bash
 [SYS_getppid] sys_getppid,   
-[SYS_getancestror] sys_getancestror,
+[SYS_getancestor] sys_getancestor,
 ```
 3.3) esta vez saldremos del kernel y en la carpeta user se debe agregar informacion en user.h (igualmente para el correcto funcionamiento e instanciacion de las funciones)
 ```bash
 int getppid(void);
-int getancestror(int);
+int getancestor(int);
 ```
 3.4) manteniendonos en la carpeta user, el archivo usys.pl tambien se debe editar, añadiendo lo siguiente
 ```bash
 entry("getppid");
-entry("getancestror"); 
+entry("getancestor"); 
 ```
 
 ### 4) una vez configuradas las funciones se procede a probarlas.
 
 se crea el archivo yosoytupadre.c en la carpeta user siguiendo las instrucciones de la pauta, luego se utiliza el codigo visto en clases para implementar las 2 nuevas system calls:
 
+yosoytupadre.c:
 ```bash
 cofdigooooooooooooo
 ```
 ### 5) Posteriormente se replica lo mismo con la otra funcion -----> getancestor()
 
+nombre_archivo.c
 ```bash
 #include "kernel/types.h"
 #include "user.h"
 
 int main() {
-  printf("ID proceso : %d\n", getancestror(0));
-  printf("el ID del padre es : %d\n", getancestror(1));
-  printf("el ID del abuelo es : %d\n", getancestror(2));
+  printf("ID proceso : %d\n", getancestor(0));
+  printf("el ID del padre es : %d\n", getancestor(1));
+  printf("el ID del abuelo es : %d\n", getancestor(2));
   if (getancestor(3)>-1){
-       printf(" el ID del bisabuelo es : %d\n", getancestror(3));
+       printf(" el ID del bisabuelo es : %d\n", getancestor(3));
     } else {
-      printf("no existe bisabuelo del proceso: %d\n", getancestror(0))
+      printf("no existe bisabuelo del proceso: %d\n", getancestor(0))
     }
   exit(0);
 }
 ```
-### 6) manejo de fallo!!!
+### 6) manejo de fallos
 
-al querer correr el script vemos que no aparece entre las opciones al ejecutar un "ls", esto se debia a que los 2 nuevos archivos no estaban inlcuidos en el Makefile, por lo tanto no se estaban compilando en el ejecutable.
+6.1) al querer correr el script vemos que no aparece entre las opciones al ejecutar un "ls", esto se debia a que los 2 nuevos archivos no estaban inlcuidos en el Makefile, por lo tanto no se estaban compilando en el ejecutable.
 
 ```c
 $ yosoytupadre
@@ -86,8 +88,12 @@ exec yosoytupadre failed
 se soluciono añadiendo lo siguiente en el makefile:
 ```bash
 $U/_yosoytupadre\
-$U/_test_ancestror\
+$U/_test_ancestor\
 ```
+
+6.2)
+
+
 
 
 ### CONFIRMACION DE USO:
