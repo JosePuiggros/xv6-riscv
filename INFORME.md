@@ -213,3 +213,23 @@ make CPUS=1 quemu
 <img width="499" height="435" alt="image" src="https://github.com/user-attachments/assets/99e41992-0c70-4eba-88af-61a6d0e7b67c" />
 
 
+## Dificultades en el proceso
+
+-no existencia de la funcion para crear numeros aleatorios
+-lenguaje C en general
+-
+
+## Posibles problemas de este tipo de Scheduler (Lottery Scheduling)
+
+
+Problema: La selección es aleatoria; por tanto, en el corto plazo pueden aparecer desviaciones importantes respecto a la proporción esperada. Esto puede ser problemático para procesos que requieren latencia o estabilidad en plazos cortos.
+Mitigación: Aumentar la duración de los "quanta" o usar técnicas híbridas (p. ej. una capa que garantice latencia mínima).
+Starvation improbable pero no imposible
+
+Problema: Si un proceso tiene 1 ticket entre muchos con números grandes, en teoría puede tardar mucho tiempo sin ser elegido (alta varianza). No es starvation garantizada pero sí posible en el corto plazo.
+Mitigación: Implementar aging (incrementar tickets de procesos que no han sido elegidos por mucho tiempo) o garantizar un ticket mínimo y/o límites de espera máxima.
+Tickets maliciosos / manipulación por procesos
+
+Problema: Si cada proceso puede fijar sus tickets libremente, puede asignarse muchos tickets y acaparar la CPU.
+Mitigación: Validar y limitar el máximo de tickets por proceso desde el kernel, o solo permitir que procesos privilegiados aumenten su número de tickets.
+
