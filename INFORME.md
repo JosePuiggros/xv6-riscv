@@ -213,11 +213,11 @@ make CPUS=1 quemu
 <img width="499" height="435" alt="image" src="https://github.com/user-attachments/assets/99e41992-0c70-4eba-88af-61a6d0e7b67c" />
 
 
-## Dificultades en el proceso
+## Dificultades en el proceso:
 
 -no existencia de la funcion para crear numeros aleatorios
 -lenguaje C en general
--
+-correccion de cantidad de cpus mutuas ejecutandose: esto hacia que la ejecucion fuese desordenada y dificil de leer
 
 ## Posibles problemas de este tipo de Scheduler (Lottery Scheduling)
 
