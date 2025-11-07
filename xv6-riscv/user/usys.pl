@@ -44,3 +44,4 @@ entry("pause");
 entry("uptime");
 entry("getppid");         #Línea agregada para getppid
 entry("getancestor");    #Línea agregada para getancestor
+entry("settickets");

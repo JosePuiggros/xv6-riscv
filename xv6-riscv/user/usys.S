@@ -115,3 +115,8 @@ getancestor:
  li a7, SYS_getancestor
  ecall
  ret
+.global settickets
+settickets:
+ li a7, SYS_settickets
+ ecall
+ ret

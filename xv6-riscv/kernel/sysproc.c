@@ -142,3 +142,24 @@ sys_getancestor(void)
 
     return p->pid;
 }
+
+uint64
+sys_settickets(void)
+{
+  int n;
+  struct proc *p = myproc();
+  
+  // Obtener argumento
+  argint(0, &n);
+  
+  // Validar: mínimo 1 ticket
+  if(n < 1)
+    n = 1;
+  
+  // Asignar tickets al proceso actual
+  acquire(&p->lock);
+  p->tickets = n;
+  release(&p->lock);
+  
+  return 0;  // Retornar éxito
+}
