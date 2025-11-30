@@ -1,235 +1,200 @@
-# Tarea 2 - Planificación de Procesos en XV6
+# Tarea 3: Protección de Lectura en XV6
 
 
 Jose Fritz & Jose Puiggros 
 
-### 1) Campo tickets en cada proceso
+### 1) Agregar los 2 nuevos syscalls en todos los archivos correspondientes
 
-Lo primero fue modificar la estructura del proceso.
-En proc.h y proc.c respectivamente se añadieron los siguientes campos para manejar los tickets y los ciclos de ejecución:
 
+user.h
 
 ```bash
-struct proc {
- .
- .
- .
-  int tickets;                 
-  int run_slices; 
+int mrdprotect(void *addr, int len);
+int munrdprotect(void *addr, int len);
+
 ```
+
+usys.pl
 ```bash
-static struct proc*
-allocproc(void)
+entry("mrdprotect");
+entry("munrdprotect");
+```
+usys.S
+```bash
+mrdprotect:
+    li a7, SYS_mrdprotect
+    ecall
+    ret
+//--------------------
+munrdprotect:
+    li a7, SYS_munrdprotect
+    ecall
+    ret
+```
+
+syscall.h
+```bash
+#define SYS_mrdprotect   25
+#define SYS_munrdprotect 26
+
+```
+
+syscall.c
+```bash
+extern uint64 sys_mrdprotect(void);
+extern uint64 sys_munrdprotect(void);
+```
+dentro del mismo archivo, debemos agragarlo a una lista de syscalls[]
+
+```bash
+[SYS_mrdprotect]  sys_mrdprotect,
+[SYS_munrdprotect] sys_munrdprotect,
+```
+defs.h
+```bash
+int mrdprotect(void *addr, int len);
+int munrdprotect(void *addr, int len);
+......
+uint64 sys_mrdprotect(void);
+uint64 sys_munrdprotect(void);
+```
+
+
+### 2) ahora creamos las 2 funciones dentro del archivo vm.c
+
+#### mrdprotect()
+```bash
+// Implementación de mrdprotect
+int
+mrdprotect(uint64 addr, uint64 len)
 {
- .
- .
- .
-  p->tickets = 100;          
-  p->run_slices = 0;
+  pte_t pte;
+  uint64 a;
+
+  // 1. Validaciones básicas [cite: 31]
+  if(len <= 0 || (addr % PGSIZE) != 0) 
+    return -1;
+
+  // 2. Recorrer el rango de páginas [cite: 18, 19]
+  for(a = addr; a < addr + len PGSIZE; a += PGSIZE){
+    // Verificar que la dirección sea parte del espacio de usuario [cite: 32]
+    if(a >= MAXVA) 
+        return -1;
+
+    // Buscar la entrada en la tabla de páginas (walk)
+    // myproc()->pagetable es la tabla del proceso actual
+    pte = walk(myproc()->pagetable, a, 0);
+
+    // 3. Verificar validez y permisos [cite: 21, 33]
+    if(pte == 0  (*pte & PTE_V) == 0  (*pte & PTE_U) == 0)
+      return -1;
+
+    // 4. Modificar bit: Limpiar PTE_R [cite: 14, 18, 21]
+    pte &= ~PTE_R; 
+  }
+
+  // Refrescar TLB (sfence.vma) para aplicar cambios inmediatamente
+  sfence_vma(); 
+  return 0;
 }
 ```
-### 2) Después se agregaró una nueva syscall en sysproc.c que nos permite asignar tickets a un proceso
+##### Esta función recorre len páginas comenzando en la dirección addr y elimina el permiso de lectura en cada una, modificando sus PTEs para que cualquier intento de lectura sobre ese rango de memoria produzca un page fault.
+
+#### munrdprotect()
+```bash
+// Implementación de munrdprotect
+int
+munrdprotect(uint64 addr, uint64 len)
+{
+  pte_tpte;
+  uint64 a;
+
+  if(len <= 0  (addr % PGSIZE) != 0) 
+    return -1;
+
+  for(a = addr; a < addr + len * PGSIZE; a += PGSIZE){
+    if(a >= MAXVA) return -1;
+
+    pte = walk(myproc()->pagetable, a, 0);
+
+    // Verificar validez [cite: 25]
+    if(pte == 0  (pte & PTE_V) == 0 || (pte & PTE_U) == 0)
+      return -1;
+
+    // Restaurar bit: Activar PTE_R [cite: 15, 24]
+    *pte |= PTE_R;
+  }
+
+  sfence_vma();
+  return 0;
+}
+```
+##### Esta función realiza la operación inversa: recorre len páginas desde addr y restaura el permiso de lectura en sus PTEs, permitiendo nuevamente que el proceso lea desde ese rango de memoria.
+
+
+
+### 3) Luego debemos agregar esas funciones dentro de sysproc.c para conectar las llamadas que hace un programa en espacio de usuario con la función real del kernel que implementa la lógica.
+
+sysproc.c
 ```bash
 uint64
-sys_settickets(void)
+sys_mrdprotect(void)
 {
-  int n;
-  struct proc *p = myproc();
+  uint64 addr;
+  int len;
 
-  // Obtener argumento
-  argint(0, &n);
+  // Obtener argumentos (dirección y longitud)
+  if(argaddr(0, &addr) < 0  argint(1, &len) < 0)
+    return -1;
 
-  // Validar: mínimo 1 ticket
-  if(n < 1)
-    n = 1;
+  return mrdprotect(addr, len);
+}
 
-  // Asignar tickets al proceso actual
-  acquire(&p->lock);
-  p->tickets = n;
-  release(&p->lock);
+uint64
+sys_munrdprotect(void)
+{
+  uint64 addr;
+  int len;
 
-  return 0;  // Retornar éxito
+  if(argaddr(0, &addr) < 0  argint(1, &len) < 0)
+    return -1;
+
+  return munrdprotect(addr, len);
 }
 ```
 
-importante mencionar que para que la syscall funciones se agregaron las siguientes lineas en syscall.h
-```bash
-[SYS_settickets] sys_settickets,
-```
-```bash
-extern uint64 sys_settickets(void);
+### 4) Prueba y ejecucion 
 
-```
-tambien se agregó la siguiente funcion para poder crear numeros aleatorios (lo cual será necesario en el scheduler)
-```bash
-static unsigned long rand_next = 1;
-
-int
-rand(void)
-{
-  rand_next = rand_next * 1103515245 + 12345;
-  return (unsigned int)(rand_next / 65536) % 32768;
-}
-
-void
-srand(unsigned int seed)
-{
-  rand_next = seed;
-}
-```
-### 3) Selección de proceso (lotería)
-Finalmente, se implementó el nuevo scheduler de tipo Lottery.
-Toda la lógica necesaria para calcular el total de tickets, generar el número aleatorio y seleccionar el proceso ganador se incorporó directamente dentro de la función scheduler en proc.c (notar que esta función ya incluye los requerimientos de contabilidad, monitoreo y robustez)
-
-```bash
-scheduler(void)
-{
-  struct proc p;
-  struct cpuc = mycpu();
-
-  c->proc = 0;
-  for(;;){
-    intr_on();
-
-    int total_tickets = 0;
-    struct proc *chosen = 0;
-
-    // 1. Calcular total de tickets y asegurar mínimo 1 ticket
-    for(p = proc; p < &proc[NPROC]; p++) {
-      acquire(&p->lock);
-      if(p->state == RUNNABLE) {
-        // ROBUSTEZ: Asegurar que todo proceso tenga al menos 1 ticket
-        if(p->tickets < 1) {
-          p->tickets = 1;
-        }
-        total_tickets += p->tickets;
-      }
-      release(&p->lock);
-    }
-
-    // ROBUSTEZ: Si no hay tickets (no hay procesos RUNNABLE), continuar
-    if(total_tickets == 0) {
-      continue;  // No bloquear el scheduler
-    }
-
-    // 2. Generar número aleatorio
-    int winner = (rand() % total_tickets) + 1;
-
-    // 3. Seleccionar el proceso ganador
-    int accumulated = 0;
-    for(p = proc; p < &proc[NPROC]; p++) {
-      acquire(&p->lock);
-      if(p->state == RUNNABLE) {
-        accumulated += p->tickets;
-        if(accumulated >= winner && chosen == 0) {
-          chosen = p;
-          break;  // Encontrado el ganador
-        }
-      }
-      release(&p->lock);
-    }
-
-    // 4. Ejecutar el proceso seleccionado
-    if(chosen) {
-      // CONTABILIDAD: Incrementar contador
-      chosen->run_slices++;
-      chosen->state = RUNNING;
-      c->proc = chosen;
-
-      // Comentar en producción, descomentar para debug:
-      // printf("PID=%d Tickets=%d Slices=%d\n", 
-      //        chosen->pid, chosen->tickets, chosen->run_slices);
-
-      swtch(&c->context, &chosen->context);
-
-      c->proc = 0;
-      release(&chosen->lock);
-    }
-  }
-}
-```
-
-### 4) Prueba y ejecucion del nuevo scheduler
-
-#### 4.1) se creo un archivo demo.c en la carpeta user con el siguiente contenido:
+#### 4.1) Para poder probar las nuevas funcionalidades creamos el archivo rdprotect_test.c y se le agregó el siguiente codigo:
 ```bash
 #include "kernel/types.h"
 #include "kernel/stat.h"
 #include "user/user.h"
-
-#define N_PROCESOS 10
-#define ITERACIONES 5000000
-
-int main(void) {
-  printf("\n=== Test Lottery Scheduling ===\n");
-  printf("Creando %d procesos con diferentes tickets...\n\n", N_PROCESOS);
-
-  for (int i = 0; i < N_PROCESOS; i++) {
-    int pid = fork();
-    if (pid == 0) {
-      // Proceso hijo
-      int mis_tickets = 50 * (i + 1);
-
-      if(settickets(mis_tickets) < 0) {
-        printf("ERROR: settickets fallo\n");
-        exit(1);
-      }
-
-      // Trabajo CPU-intensivo
-      volatile long counter = 0;
-      for(long j = 0; j < ITERACIONES; j++) {
-        counter++;
-      }
-
-      // Al terminar, imprimir resultado
-      printf("[HIJO %d] PID=%d Tickets=%d TERMINADO\n", i, getpid(), mis_tickets);
-      exit(0);
-    }
-  }
-
-  // Padre espera a todos los hijos
-  for(int i = 0; i < N_PROCESOS; i++) {
-    wait(0);
-  }
-
-  printf("\n=== Test completado exitosamente ===\n\n");
-  exit(0);
+int main() {
+ char *addr = sbrk(0); // Dirección actual del heap
+ sbrk(4096); // Reservar una página
+ addr[0] = 'Z'; // Escribir valor inicial
+ // Proteger contra lectura
+ if (mrdprotect(addr, 1) < 0) {
+ printf("mrdprotect falló\n");
+ exit(1);
+ }
+ // Escritura aún permitida
+ addr[0] = 'A';
+ // Intento de lectura debería provocar fallo
+ char c = addr[0];
+ printf("Valor leído: %c (esto NO debería imprimirse)\n", c);
+ // Revertir protección
+ if (munrdprotect(addr, 1) < 0) {
+ printf("munrdprotect falló\n");
+ exit(1);
+ }
+ printf("Protección revertida correctamente.\n");
+ exit(0);
 }
 ```
-#### 4.2) Compilacion y Ejecucion del SO
- se utilizaron los siguientes comandos:
-
- ```bash
-make clean
-
-make CPUS=1 quemu
-
- demo
-
+#### 4.2) luego se agrego la siguiente linea al makefile para incluirlo en la compilacion del QEMU:
+```bash
+$U/_rdprotect_test\ debajo de UPROGS
 ```
-
-#### 4.3) validacion de la ejecucion:
-
-<img width="499" height="435" alt="image" src="https://github.com/user-attachments/assets/99e41992-0c70-4eba-88af-61a6d0e7b67c" />
-
-
-## Dificultades en el proceso:
-
--no existencia de la funcion para crear numeros aleatorios
--lenguaje C en general
--correccion de cantidad de cpus mutuas ejecutandose: esto hacia que la ejecucion fuese desordenada y dificil de leer
-
-## Posibles problemas de este tipo de Scheduler (Lottery Scheduling)
-
-
-Problema: La selección es aleatoria; por tanto, en el corto plazo pueden aparecer desviaciones importantes respecto a la proporción esperada. Esto puede ser problemático para procesos que requieren latencia o estabilidad en plazos cortos.
-Mitigación: Aumentar la duración de los "quanta" o usar técnicas híbridas (p. ej. una capa que garantice latencia mínima).
-Starvation improbable pero no imposible
-
-Problema: Si un proceso tiene 1 ticket entre muchos con números grandes, en teoría puede tardar mucho tiempo sin ser elegido (alta varianza). No es starvation garantizada pero sí posible en el corto plazo.
-Mitigación: Implementar aging (incrementar tickets de procesos que no han sido elegidos por mucho tiempo) o garantizar un ticket mínimo y/o límites de espera máxima.
-Tickets maliciosos / manipulación por procesos
-
-Problema: Si cada proceso puede fijar sus tickets libremente, puede asignarse muchos tickets y acaparar la CPU.
-Mitigación: Validar y limitar el máximo de tickets por proceso desde el kernel, o solo permitir que procesos privilegiados aumenten su número de tickets.
 
