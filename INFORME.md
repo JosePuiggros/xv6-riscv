@@ -6,6 +6,17 @@ Jose Fritz & Jose Puiggros
 
 ## 1) Agregar los 2 nuevos syscalls en todos los archivos correspondientes
 
+| Propósito                     | Archivo            |
+| ----------------------------- | ------------------ |
+| Número de syscall             | `kernel/syscall.h` |
+| Mapeo syscall → handler       | `kernel/syscall.c` |
+| Handler que recibe args       | `kernel/sysproc.c` |
+| Prototipos de funciones       | `kernel/defs.h`    |
+| Wrappers en userland          | `user/usys.S`      |
+| Declaración para apps usuario | `user/user.h`      |
+| Implementación real           | `kernel/vm.c`      |
+
+
 ### user.h
 
 ```bash
@@ -234,14 +245,7 @@ $U/_rdprotect_test\ debajo de UPROGS
 ### 4.3) validación de la ejecución
 <img width="472" height="189" alt="image" src="https://github.com/user-attachments/assets/0ab737fc-2ad1-4df0-ad66-7de2bf0e5cbb" />
 
-- scause 0xd (13 en decimal): En la arquitectura RISC-V, el código de excepción 13 significa Load Page Fault (Fallo de página por carga/lectura).
-
-- La Causa: El procesador intentó ejecutar la línea char c = addr[0]; (leer memoria).
-
-
-- El Resultado: Como tu función mrdprotect eliminó exitosamente el bit PTE_R (permiso de lectura), la CPU bloqueó la operación y mató el proceso.
-
-#### Conclusión: Has implementado con éxito una región de memoria "Write-Only" (o al menos, protegida contra lectura). El sistema operativo protegió el secreto tal como pedía el enunciado.
+- Durante la ejecución del programa de prueba, la instrucción char c = addr[0]; generó correctamente un Load Page Fault (scause = 0xd), lo que confirma que el kernel bloqueó el intento de lectura después de que mrdprotect removiera el permiso PTE_R. Este resultado demuestra que la protección de lectura fue aplicada de forma efectiva: el sistema operativo detectó el acceso prohibido y finalizó el proceso tal como corresponde. Con ello, se valida que la implementación cumple exitosamente con el objetivo de crear una región de memoria protegida contra lectura.
 ---
 
 
