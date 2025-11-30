@@ -484,3 +484,64 @@ ismapped(pagetable_t pagetable, uint64 va)
   }
   return 0;
 }
+
+// Implementación de mrdprotect
+int
+mrdprotect(uint64 addr, uint64 len)
+{
+  pte_t *pte;
+  uint64 a;
+
+  // 1. Validaciones básicas [cite: 31]
+  if(len <= 0 || (addr % PGSIZE) != 0) 
+    return -1;
+  
+  // 2. Recorrer el rango de páginas [cite: 18, 19]
+  for(a = addr; a < addr + len * PGSIZE; a += PGSIZE){
+    // Verificar que la dirección sea parte del espacio de usuario [cite: 32]
+    if(a >= MAXVA) 
+        return -1;
+
+    // Buscar la entrada en la tabla de páginas (walk)
+    // myproc()->pagetable es la tabla del proceso actual
+    pte = walk(myproc()->pagetable, a, 0);
+
+    // 3. Verificar validez y permisos [cite: 21, 33]
+    if(pte == 0 || (*pte & PTE_V) == 0 || (*pte & PTE_U) == 0)
+      return -1;
+
+    // 4. Modificar bit: Limpiar PTE_R [cite: 14, 18, 21]
+    *pte &= ~PTE_R; 
+  }
+  
+  // Refrescar TLB (sfence.vma) para aplicar cambios inmediatamente
+  sfence_vma(); 
+  return 0;
+}
+
+// Implementación de munrdprotect
+int
+munrdprotect(uint64 addr, uint64 len)
+{
+  pte_t *pte;
+  uint64 a;
+
+  if(len <= 0 || (addr % PGSIZE) != 0) 
+    return -1;
+
+  for(a = addr; a < addr + len * PGSIZE; a += PGSIZE){
+    if(a >= MAXVA) return -1;
+    
+    pte = walk(myproc()->pagetable, a, 0);
+
+    // Verificar validez [cite: 25]
+    if(pte == 0 || (*pte & PTE_V) == 0 || (*pte & PTE_U) == 0)
+      return -1;
+
+    // Restaurar bit: Activar PTE_R [cite: 15, 24]
+    *pte |= PTE_R;
+  }
+  
+  sfence_vma();
+  return 0;
+}

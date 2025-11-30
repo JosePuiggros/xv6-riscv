@@ -163,3 +163,29 @@ sys_settickets(void)
   
   return 0;  // Retornar éxito
 }
+
+uint64
+sys_mrdprotect(void)
+{
+  uint64 addr;
+  int len;
+
+  // Como devuelven void, las llamamos directamente:
+  argaddr(0, &addr); // Recupera el primer argumento (puntero)
+  argint(1, &len);   // Recupera el segundo argumento (entero)
+
+  // Llamamos a la lógica que implementaste en vm.c
+  return mrdprotect(addr, len);
+}
+
+uint64
+sys_munrdprotect(void)
+{
+  uint64 addr;
+  int len;
+
+  argaddr(0, &addr);
+  argint(1, &len);
+
+  return munrdprotect(addr, len);
+}

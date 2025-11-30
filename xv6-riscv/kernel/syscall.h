@@ -23,3 +23,5 @@
 #define SYS_getppid 22        //Número de syscall para getppid
 #define SYS_getancestor 23   //Número de syscall para getancestor
 #define SYS_settickets 24
+#define SYS_mrdprotect 25
+#define SYS_munrdprotect 26

@@ -120,3 +120,13 @@ settickets:
  li a7, SYS_settickets
  ecall
  ret
+.global mrdprotect
+mrdprotect:
+ li a7, SYS_mrdprotect
+ ecall
+ ret
+.global munrdprotect
+munrdprotect:
+ li a7, SYS_munrdprotect
+ ecall
+ ret
